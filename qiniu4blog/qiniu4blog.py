@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import os, time, sys, ConfigParser, platform, urllib, qiniu, pyperclip, signal, threading
+import os, time, sys, configparser, platform, qiniu, pyperclip, signal, threading
+import urllib.parse
 from mimetypes import MimeTypes
 from os.path import expanduser
 from watchdog.observers import Observer
@@ -41,14 +42,14 @@ def job(file, mode):
         url = upload_with_full_Path_cmd(file)
     pyperclip.copy(url)
     pyperclip.paste()
-    print url
+    print( url)
     with open('MARKDOWN_FORMAT_URLS.txt', 'a') as f:
         image = '![' + url + ']' + '(' + url + ')' + '\n'
         f.write(image + '\n')
 
 #-----------------配置--------------------
 homedir = expanduser("~")  # 获取用户主目录
-config = ConfigParser.RawConfigParser()
+config = configparser.RawConfigParser()
 config.read(homedir + '/qiniu.cfg')  # 读取配置文件
 mime = MimeTypes()
 threadLock = threading.Lock()
@@ -75,11 +76,11 @@ try:
     path_to_watch = config.get('config', 'path_to_watch')  # 设置   监控文件夹
     enable = config.get('custom_url', 'enable')  # 设置自定义使能 custom_url
     if enable == 'false':
-        print 'custom_url not set'
+        print ('custom_url not set')
     else:
         addr = config.get('custom_url', 'addr')
-except ConfigParser.NoSectionError, err:
-    print 'Error Config File:', err
+except configparser.NoSectionError as err:
+    print ('Error Config File:', err)
 
 
 # 设置编码
@@ -110,6 +111,9 @@ def parseRet(retData, respInfo):
 
 # 上传文件方式 1
 def upload_without_key(bucket, filePath, uploadname):
+    print("bucket: ", bucket)
+    print("文件地址：", filePath)
+    print("上传地址：", uploadname)
     auth = qiniu.Auth(accessKey, secretKey)
     upToken = auth.upload_token(bucket, key=None)
     key = uploadname
@@ -123,9 +127,17 @@ def upload_with_full_Path(filePath):
         fileName = "/".join("".join(filePath.rsplit(path_to_watch))[1:].split("\\"))
     else:
         fileName = "".join(filePath.rsplit(path_to_watch))[1:]
-    upload_without_key(bucket, filePath, fileName.decode(setCodeingByOS()))
+
+    # upload_without_key(bucket, filePath, fileName.decode(setCodeingByOS()))
+    print("文件名2： ", fileName)
+    upload_without_key(bucket, filePath, fileName)
+    
+
     if enable == 'true':
-        return addr + urllib.quote(fileName.decode(setCodeingByOS()).encode('utf-8'))
+        # return addr + urllib.quote(fileName.decode(setCodeingByOS()).encode('utf-8'))
+        print("文件名2： ", fileName)    
+        return addr + urllib.parse.quote(fileName)
+        
     else:
         return 'http://' + bucket + '.qiniudn.com/' + urllib.quote(fileName.decode(setCodeingByOS()).encode('utf-8'))
 
@@ -136,9 +148,16 @@ def upload_with_full_Path_cmd(filePath):
         fileName = os.path.basename("/".join((filePath.split("\\"))))
     else:
         fileName = os.path.basename(filePath)
-    upload_without_key(bucket, filePath, fileName.decode(setCodeingByOS()))
+    # upload_without_key(bucket, filePath, fileName.decode(setCodeingByOS()))
+    print("文件名3： ", fileName)
+    upload_without_key(bucket, filePath, fileName)
+    
     if enable == 'true':
-        return addr + urllib.quote(fileName.decode(setCodeingByOS()).encode('utf-8'))
+        # return addr + urllib.quote(fileName.decode(setCodeingByOS()).encode('utf-8'))
+        print("文件名3： ", fileName)
+        print("URL： ", addr + "/" + urllib.parse.quote(fileName))
+        return addr + urllib.parse.quote(fileName)
+    
     else:
         return 'http://' + bucket + '.qiniudn.com/' + urllib.quote(fileName.decode(setCodeingByOS()).encode('utf-8'))
 
@@ -166,12 +185,12 @@ def window_main():
         with open('MARKDOWN_FORMAT_URLS.txt', 'a') as f:
             for url in url_list:
                 image = '![' + url + ']' + '(' + url + ')' + '\n'
-                print url, '\n'
+                print( url, '\n')
                 f.write(image)
-        print "\nNOTE: THE MARKDOWN FORMAT URLS ALREADY SAVED IN MARKDOWN_FORMAT_URLS.txt FILE"
+        print ("\nNOTE: THE MARKDOWN FORMAT URLS ALREADY SAVED IN MARKDOWN_FORMAT_URLS.txt FILE")
         set_clipboard(url_list)
         sys.exit(-1)
-    print "running ... ... \nPress Ctr+C to Stop"
+    print ("running ... ... \nPress Ctr+C to Stop")
     before = get_filepaths(path_to_watch)
     while 1:
         time.sleep(1)
@@ -185,9 +204,9 @@ def window_main():
             with open('MARKDOWN_FORMAT_URLS.txt', 'a') as f:
                 for url in url_list:
                     image = '![' + url + ']' + '(' + url + ')' + '\n'
-                    print url, '\n'
+                    print( url, '\n')
                     f.write(image)
-            print "\nNOTE: THE MARKDOWN FORMAT URLS ALREADY SAVED IN MARKDOWN_FORMAT_URLS.txt FILE"
+            print ("\nNOTE: THE MARKDOWN FORMAT URLS ALREADY SAVED IN MARKDOWN_FORMAT_URLS.txt FILE")
             set_clipboard(url_list)
         if removed:
             pass
@@ -200,7 +219,7 @@ def unix_main():
         for i in sys.argv[1:]:
             myThread(i, 2).start()
         sys.exit(-1)
-    print "running ... ... \nPress Ctr+C to Stop"
+    print( "running ... ... \nPress Ctr+C to Stop")
     observer = Observer()
     observer.schedule(MyHandler(), path=path_to_watch if path_to_watch else '.', recursive=True)
     observer.start()

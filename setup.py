@@ -2,17 +2,17 @@
 from setuptools import setup, find_packages
 import sys, os
 
-version = '1.4.0'
+version = '1.4.1'
 
 setup(name='qiniu4blog',
       version=version,
       description="写博客用的七牛图床",
       long_description="""写博客用的七牛图床""",
       classifiers=[],
-      keywords='python qiniu',
-      author='wzyuliyang',
-      author_email='wzyuliyang911@gmail.com',
-      url='https://github.com/wzyuliyang/qiniu4blog',
+      keywords='python3 qiniu auto_upload',
+      author='hackeryard',
+      author_email='hrunker@gmail.com',
+      url='https://github.com/hackeryard/qiniu4blog',
       license='MIT License',
       packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
       include_package_data=True,
@@ -20,7 +20,7 @@ setup(name='qiniu4blog',
       install_requires=[
         'qiniu',
 		'pyperclip',
-    'watchdog',
+		'watchdog',
       ],
       entry_points={
         'console_scripts':[
